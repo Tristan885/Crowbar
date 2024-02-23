@@ -299,30 +299,48 @@ Public Class SourceMdlFile49
 
 		'TODO: According to MDL v48 source code, the following fields are not used.
 		'      Test various MDL v48 models to see if any use these. 
-
-		Me.theMdlFileData.nameCopyOffset = Me.theInputFileReader.ReadInt32()
-		If Me.theMdlFileData.nameCopyOffset > 0 Then
-			inputFileStreamPosition = Me.theInputFileReader.BaseStream.Position
-			Me.theInputFileReader.BaseStream.Seek(fileOffsetStart + Me.theMdlFileData.nameCopyOffset, SeekOrigin.Begin)
-			fileOffsetStart2 = Me.theInputFileReader.BaseStream.Position
-
-			Me.theMdlFileData.theNameCopy = FileManager.ReadNullTerminatedString(Me.theInputFileReader)
-			Me.theMdlFileData.theModelName = Me.theMdlFileData.theNameCopy
-
-			fileOffsetEnd2 = Me.theInputFileReader.BaseStream.Position - 1
-			Me.theMdlFileData.theFileSeekLog.Add(fileOffsetStart2, fileOffsetEnd2, "theMdlFileData.theNameCopy = " + Me.theMdlFileData.theNameCopy)
-			Me.theInputFileReader.BaseStream.Seek(inputFileStreamPosition, SeekOrigin.Begin)
-		Else
+		If TheApp.Settings.IsPostal3IsChecked Then
+			'Just fillers for Crowbar
 			Me.theMdlFileData.theNameCopy = ""
+
+			Me.theMdlFileData.boneFlexDriverCount = 0
+			Me.theMdlFileData.boneFlexDriverOffset = 0
+
+			Me.theMdlFileData.unknownValue = 0
+
+			Me.theMdlFileData.bodygroupPresetCount = 0
+			Me.theMdlFileData.bodygroupPresetOffset = 0
+
+			'Actual Postal III data here
+			Me.theMdlFileData.numBoltons = Me.theInputFileReader.ReadInt32()
+			Me.theMdlFileData.boltonIndex = Me.theInputFileReader.ReadInt32()
+			Me.theMdlFileData.numPrefabs = Me.theInputFileReader.ReadInt32()
+			Me.theMdlFileData.prefabIndex = Me.theInputFileReader.ReadInt32()
+		Else
+			Me.theMdlFileData.nameCopyOffset = Me.theInputFileReader.ReadInt32()
+			If Me.theMdlFileData.nameCopyOffset > 0 Then
+				inputFileStreamPosition = Me.theInputFileReader.BaseStream.Position
+				Me.theInputFileReader.BaseStream.Seek(fileOffsetStart + Me.theMdlFileData.nameCopyOffset, SeekOrigin.Begin)
+				fileOffsetStart2 = Me.theInputFileReader.BaseStream.Position
+
+				Me.theMdlFileData.theNameCopy = FileManager.ReadNullTerminatedString(Me.theInputFileReader)
+				Me.theMdlFileData.theModelName = Me.theMdlFileData.theNameCopy
+
+				fileOffsetEnd2 = Me.theInputFileReader.BaseStream.Position - 1
+				Me.theMdlFileData.theFileSeekLog.Add(fileOffsetStart2, fileOffsetEnd2, "theMdlFileData.theNameCopy = " + Me.theMdlFileData.theNameCopy)
+				Me.theInputFileReader.BaseStream.Seek(inputFileStreamPosition, SeekOrigin.Begin)
+			Else
+				Me.theMdlFileData.theNameCopy = ""
+			End If
+
+			Me.theMdlFileData.boneFlexDriverCount = Me.theInputFileReader.ReadInt32()
+			Me.theMdlFileData.boneFlexDriverOffset = Me.theInputFileReader.ReadInt32()
+
+			Me.theMdlFileData.unknownValue = Me.theInputFileReader.ReadInt32()
+
+			Me.theMdlFileData.bodygroupPresetCount = Me.theInputFileReader.ReadInt32()
+			Me.theMdlFileData.bodygroupPresetOffset = fileOffsetStart + Me.theInputFileReader.ReadInt32()
 		End If
-
-		Me.theMdlFileData.boneFlexDriverCount = Me.theInputFileReader.ReadInt32()
-		Me.theMdlFileData.boneFlexDriverOffset = Me.theInputFileReader.ReadInt32()
-
-		Me.theMdlFileData.unknownValue = Me.theInputFileReader.ReadInt32()
-
-		Me.theMdlFileData.bodygroupPresetCount = Me.theInputFileReader.ReadInt32()
-		Me.theMdlFileData.bodygroupPresetOffset = fileOffsetStart + Me.theInputFileReader.ReadInt32()
 
 		For x As Integer = 0 To Me.theMdlFileData.reserved.Length - 1
 			Me.theMdlFileData.reserved(x) = Me.theInputFileReader.ReadInt32()
@@ -4277,6 +4295,82 @@ Public Class SourceMdlFile49
 				'Me.theMdlFileData.theFileSeekLog.LogToEndAndAlignToNextStart(Me.theInputFileReader, fileOffsetEnd, 4, "theMdlFileData.theBodygroupPresets alignment")
 			Catch ex As Exception
 				Dim debug As Integer = 4242
+			End Try
+		End If
+	End Sub
+
+	Public Sub ReadBoltons()
+		If Me.theMdlFileData.numBoltons > 0 Then
+			Dim boltonInputFileStreamPosition As Long
+			Dim inputFileStreamPosition As Long
+
+			Try
+				Me.theInputFileReader.BaseStream.Seek(Me.theMdlFileData.boltonIndex, SeekOrigin.Begin)
+
+				Me.theMdlFileData.theBoltons = New List(Of SourceMdlBolton)(Me.theMdlFileData.numBoltons)
+				For i As Integer = 0 To Me.theMdlFileData.numBoltons - 1
+					boltonInputFileStreamPosition = Me.theInputFileReader.BaseStream.Position
+					Dim aBolton As New SourceMdlBolton()
+
+					aBolton.type = Me.theInputFileReader.ReadInt32()
+					aBolton.szmodelnameindex = Me.theInputFileReader.ReadInt32()
+
+					Me.theMdlFileData.theBoltons.Add(aBolton)
+
+					inputFileStreamPosition = Me.theInputFileReader.BaseStream.Position
+
+					Me.theInputFileReader.BaseStream.Seek(boltonInputFileStreamPosition + aBolton.szmodelnameindex, SeekOrigin.Begin)
+
+					aBolton.theModelName = FileManager.ReadNullTerminatedString(Me.theInputFileReader)
+
+					Me.theInputFileReader.BaseStream.Seek(inputFileStreamPosition, SeekOrigin.Begin)
+				Next
+			Catch ex As Exception
+
+			End Try
+		End If
+	End Sub
+
+	Public Sub ReadPrefabs()
+		If Me.theMdlFileData.numPrefabs > 0 Then
+			Dim prefabInputFileStreamPosition As Long
+			Dim inputFileStreamPosition As Long
+
+			Try
+				Me.theInputFileReader.BaseStream.Seek(Me.theMdlFileData.prefabIndex, SeekOrigin.Begin)
+
+				Me.theMdlFileData.thePrefabs = New List(Of SourceMdlPrefab)(Me.theMdlFileData.numPrefabs)
+				For i As Integer = 0 To Me.theMdlFileData.numPrefabs - 1
+					prefabInputFileStreamPosition = Me.theInputFileReader.BaseStream.Position
+					Dim aPrefab As New SourceMdlPrefab()
+
+					aPrefab.sznameindex = Me.theInputFileReader.ReadInt32()
+					aPrefab.skin = Me.theInputFileReader.ReadInt32()
+					aPrefab.boltonsmask = Me.theInputFileReader.ReadInt32()
+					aPrefab.bodypartsindex = Me.theInputFileReader.ReadInt32()
+
+					inputFileStreamPosition = Me.theInputFileReader.BaseStream.Position
+
+					Me.theInputFileReader.BaseStream.Seek(prefabInputFileStreamPosition + aPrefab.bodypartsindex, SeekOrigin.Begin)
+
+					aPrefab.theBodyParts = New List(Of Byte)(Me.theMdlFileData.bodyPartCount)
+
+					For j As Integer = 0 To Me.theMdlFileData.bodyPartCount - 1
+						aPrefab.theBodyParts.Add(Me.theInputFileReader.ReadByte())
+					Next
+
+					Me.theMdlFileData.thePrefabs.Add(aPrefab)
+
+					'inputFileStreamPosition = Me.theInputFileReader.BaseStream.Position
+
+					Me.theInputFileReader.BaseStream.Seek(prefabInputFileStreamPosition + aPrefab.sznameindex, SeekOrigin.Begin)
+
+					aPrefab.theName = FileManager.ReadNullTerminatedString(Me.theInputFileReader)
+
+					Me.theInputFileReader.BaseStream.Seek(inputFileStreamPosition, SeekOrigin.Begin)
+				Next
+			Catch ex As Exception
+
 			End Try
 		End If
 	End Sub

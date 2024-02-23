@@ -538,6 +538,12 @@ Public Class SourceModel49
 
 		mdlFile.ReadBodygroupPresets()
 
+		'Postal III stuffs
+		If TheApp.Settings.IsPostal3IsChecked Then
+			mdlFile.ReadBoltons()
+			mdlFile.ReadPrefabs()
+		End If
+
 		'mdlFile.ReadFinalBytesAlignment()
 		'mdlFile.ReadUnknownValues(Me.theMdlFileData.theFileSeekLog)
 		mdlFile.ReadUnreadBytes()
@@ -684,6 +690,12 @@ Public Class SourceModel49
 				command = "$keyvalues"
 			End If
 			qcFile.WriteKeyValues(Me.theMdlFileData.theKeyValuesText, command)
+
+			'Postal III stuffs
+			If TheApp.Settings.IsPostal3IsChecked Then
+				qcFile.WriteBoltons()
+				qcFile.WritePrefabs()
+			End If
 		Catch ex As Exception
 			Dim debug As Integer = 4242
 		Finally
