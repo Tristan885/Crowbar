@@ -281,6 +281,12 @@ Public Class SourceQcFile49
 			line += aBodyModel.theSmdFileNames(0)
 			line += """"
 
+			If TheApp.Settings.IsPostal3IsChecked Then
+				line += " ""#"
+				line += aBodyModel.theSmdFileNames(0).Substring(0, aBodyModel.theSmdFileNames(0).Length - 4)
+				line += """"
+			End If
+
 			line += " {"
 		End If
 

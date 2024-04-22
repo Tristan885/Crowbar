@@ -555,5 +555,6 @@
 	Public theProceduralBonesCommandIsUsed As Boolean
 	Public theSectionFrameCount As Integer
 	Public theSectionFrameMinFrameCount As Integer
+	Public isBigEndian As Boolean
 
 End Class

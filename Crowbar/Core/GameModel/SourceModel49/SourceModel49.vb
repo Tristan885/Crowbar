@@ -472,6 +472,7 @@ Public Class SourceModel49
 		'Me.theMdlFileData.theModelCommandIsUsed = False
 		Me.theMdlFileData.theProceduralBonesCommandIsUsed = False
 		Me.theMdlFileData.theAnimBlockSizeNoStallOptionIsUsed = False
+		Me.theMdlFileData.isBigEndian = False
 
 		mdlFile.ReadMdlHeader00("MDL File Header 00")
 		mdlFile.ReadMdlHeader01("MDL File Header 01")
@@ -595,6 +596,8 @@ Public Class SourceModel49
 		If Me.theVtxFileData Is Nothing Then
 			Me.theVtxFileData = New SourceVtxFileData07()
 		End If
+
+		Me.theVtxFileData.isBigEndian = False
 
 		'TEST: When a model has a nameCopy, it seems to also use the VTF file strip group topology fields.
 		Dim vtxFile As New SourceVtxFile07(Me.theInputFileReader, Me.theVtxFileData)
